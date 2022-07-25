@@ -17,6 +17,10 @@ impl_database_ext! {
 
         #[cfg(feature = "chrono")]
         sqlx::types::chrono::DateTime<sqlx::types::chrono::Utc> | sqlx::types::chrono::DateTime<_>,
+        #[cfg(feature = "time")]
+        sqlx::types::time::PrimitiveDateTime,
+        #[cfg(feature = "time")]
+        sqlx::types::time::OffsetDateTime,
     },
     ParamChecking::Weak,
     feature-types: _info => None,

@@ -15,6 +15,7 @@ const SQLITE_AFF_INTEGER: u8 = 0x44; /* 'D' */
 const SQLITE_AFF_REAL: u8 = 0x45; /* 'E' */
 
 // opcodes
+const OP_AFFINITY: &str = "Affinity";
 const OP_INIT: &str = "Init";
 const OP_GOTO: &str = "Goto";
 const OP_DECR_JUMP_ZERO: &str = "DecrJumpZero";
@@ -43,6 +44,7 @@ const OP_INCR_VACUUM: &str = "IncrVacuum";
 const OP_INIT_COROUTINE: &str = "InitCoroutine";
 const OP_IS_NULL: &str = "IsNull";
 const OP_IS_NULL_OR_TYPE: &str = "IsNullOrType";
+// const OP_COMPARE: &str = "Compare";
 const OP_LAST: &str = "Last";
 const OP_LE: &str = "Le";
 const OP_LT: &str = "Lt";
@@ -52,6 +54,8 @@ const OP_NEXT: &str = "Next";
 const OP_NO_CONFLICT: &str = "NoConflict";
 const OP_NOT_EXISTS: &str = "NotExists";
 const OP_NOT_NULL: &str = "NotNull";
+const OP_OFFSET: &str = "Offset";
+const OP_OFFSET_LIMIT: &str = "OffsetLimit";
 const OP_ONCE: &str = "Once";
 const OP_PREV: &str = "Prev";
 const OP_PROGRAM: &str = "Program";
@@ -69,6 +73,10 @@ const OP_SEEK_SCAN: &str = "SeekScan";
 const OP_SEQUENCE_TEST: &str = "SequenceTest";
 const OP_SORTER_NEXT: &str = "SorterNext";
 const OP_SORTER_SORT: &str = "SorterSort";
+// const OP_SORTER_DATA: &str = "SorterData";
+// const OP_SORTER_INSERT: &str = "SorterInsert";
+// const OP_SORTER_OPEN: &str = "SorterOpen";
+// const OP_RESET_SORTER: &str = "ResetSorter";
 const OP_V_FILTER: &str = "VFilter";
 const OP_V_NEXT: &str = "VNext";
 const OP_YIELD: &str = "Yield";
@@ -76,7 +84,9 @@ const OP_JUMP: &str = "Jump";
 const OP_COLUMN: &str = "Column";
 const OP_MAKE_RECORD: &str = "MakeRecord";
 const OP_INSERT: &str = "Insert";
+// const OP_DELETE: &str = "Delete";
 const OP_IDX_INSERT: &str = "IdxInsert";
+// const OP_OPEN_DUP: &str = "OpenDup";
 const OP_OPEN_PSEUDO: &str = "OpenPseudo";
 const OP_OPEN_READ: &str = "OpenRead";
 const OP_OPEN_WRITE: &str = "OpenWrite";
@@ -117,6 +127,7 @@ const OP_REMAINDER: &str = "Remainder";
 const OP_CONCAT: &str = "Concat";
 const OP_RESULT_ROW: &str = "ResultRow";
 const OP_HALT: &str = "Halt";
+// const OP_TRANSACTION: &str = "Transaction";
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 struct ColumnType {
@@ -562,6 +573,14 @@ pub(super) fn explain(
                     }
                 }
 
+                OP_OFFSET_LIMIT => {
+                    // r[P2] is total number of rows, value of LIMIT, -1, or r[P1] + r[P3]
+                    state.r.insert(p2, RegDataType::Single(ColumnType {
+                        datatype: DataType::Int,
+                        nullable: Some(false),
+                    }));
+                }
+
                 OP_OPEN_EPHEMERAL | OP_OPEN_AUTOINDEX => {
                     //Create a new pointer which is referenced by p1
                     state.p.insert(
@@ -601,6 +620,10 @@ pub(super) fn explain(
                         }
                     }
                     //else we don't know about the cursor
+                }
+
+                OP_AFFINITY => {
+                    // No writes
                 }
 
                 OP_AGG_STEP | OP_AGG_VALUE => {
